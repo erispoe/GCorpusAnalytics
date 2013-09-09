@@ -29,6 +29,9 @@ def main():
     
             if corpus == 'books':
                 results = GBooksQuery(y1, y2, it, expressions, outfile)
+            else:
+                print """At the moment, the google corpora supported are:
+- books"""
         except Exception, e:
             print 'Oups, there seems to be a problem somewhere:'
             print e
@@ -82,6 +85,7 @@ def GBooksQuery(y1, y2, it, expressions, outfile=''):
     return results
 
 def makeSafe(expressions):
+    #Takes a list of strings and returns alist of html safe strings
     safeexpr = []
     for e in expressions:
         e = urllib.quote(e, safe="%/:=&?~#+!$,;'@()*[]")
@@ -102,7 +106,7 @@ def makeDatelist(y1, y2, it):
     
 
 def resultStatsBooks(expression, date1, date2):
-    expression = urllib.quote(expression, safe="%/:=&?~#+!$,;'@()*[]")
+    #Query Google Books to return the numbers of items corresponding to the expression between the dates date1 and date2
     
     user_agent = 'Mozilla/5.0 (Windows NT 6.2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1464.0 Safari/537.36'
     headers={'User-Agent':user_agent,}
@@ -116,8 +120,6 @@ def resultStatsBooks(expression, date1, date2):
     DD2 = str(date2.timetuple()[2])
     
     url = 'http://www.google.com/search?hl=en&newwindow=1&q=' + expression + '&safe=off&tbm=bks&tbs=bkt:b%2Ccdr%3A1%2Ccd_min%3A' + MM1 +'%2F' + DD1 + '%2F' + YYYY1 + '%2Ccd_max%3A' + MM2 + '%2F' + DD2 + '%2F' + YYYY2
-    
-    #print url
     
     request=urllib.Request(url,None,headers)
     soup = BeautifulSoup(urllib.urlopen(request).read())
@@ -137,6 +139,7 @@ def resultStatsBooks(expression, date1, date2):
     return resultStats
     
 def printRow(list):
+    #Takes a list and prints it on a line, elements separated by commas
     st = ''
     for i in list:
         st = st + str(i) + ', '
@@ -144,7 +147,7 @@ def printRow(list):
     print st
     
 def printHelp():
-    
+    #Prints the README.md file as help
     helptext = open('README.md').read()
     print helptext
     

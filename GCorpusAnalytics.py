@@ -4,6 +4,7 @@ import datetime
 import csv
 import time
 import sys
+import random
 
 def main():
     
@@ -33,10 +34,13 @@ def main():
                 print """At the moment, the google corpora supported are:
 - books"""
         except Exception, e:
-            print 'Oups, there seems to be a problem somewhere:'
-            print e
-            print 'Here is how to use the script:'
-            printHelp()
+            print "Oups, there seems to be a problem somewhere: '" , e , "'"
+            try:
+                if e.code == 503:
+                    print 'Google temporarily blocked your queries, try again in a little while.'
+            except:
+                pass
+            print "To get help on how to use the script, type 'python GCorpusAnalytics.py help'"
 
 def GBooksQuery(y1, y2, it, expressions, outfile=''):
     #Parameters:
@@ -47,10 +51,13 @@ def GBooksQuery(y1, y2, it, expressions, outfile=''):
     #outfile: file where the resuts are to be exported
 
     wr = 0
+    wrc = 0
     
     if outfile != '':
+        controlfile = open(outfile.rstrip('\n') + '_urlcontrol.csv', 'wb')
         outfile = open(outfile, 'wb')
         wr = csv.writer(outfile, quoting=csv.QUOTE_ALL)
+        wrc = csv.writer(controlfile, quoting=csv.QUOTE_ALL)
     
     results = []
     datamodel = [] 
@@ -61,6 +68,7 @@ def GBooksQuery(y1, y2, it, expressions, outfile=''):
     
     if wr != 0:
         wr.writerow(datamodel)
+        wrc.writerow(datamodel)
         
     expressions = makeSafe(expressions)
     
@@ -72,15 +80,18 @@ def GBooksQuery(y1, y2, it, expressions, outfile=''):
         if d1.year != d2.year:
             strspan = str(d1.year) + '-' + str(d2.year)
         result = [strspan]
+        urls = [strspan]
         for e in expressions:    
-            num = resultStatsBooks(e, d1, d2)
+            num, url = resultStatsBooks(e, d1, d2)
             result.append(num)
-            time.sleep(2)
+            urls.append(url)
+            time.sleep(random.uniform(1, 3))
         results.append(result)
         printRow(result)
         
         if wr != 0:
             wr.writerow(result)
+            wrc.writerow(urls)
             
     return results
 
@@ -108,8 +119,7 @@ def makeDatelist(y1, y2, it):
 def resultStatsBooks(expression, date1, date2):
     #Query Google Books to return the numbers of items corresponding to the expression between the dates date1 and date2
     
-    user_agent = 'Mozilla/5.0 (Windows NT 6.2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1464.0 Safari/537.36'
-    headers={'User-Agent':user_agent,}
+    headers={'User-Agent':randomUserAgent(),}
     
     YYYY1 = str(date1.timetuple()[0])
     MM1 = str(date1.timetuple()[1])
@@ -136,7 +146,7 @@ def resultStatsBooks(expression, date1, date2):
     if len(soup.find("div", {"id": "topstuff"}).contents) > 0:
         resultStats = 0
     
-    return resultStats
+    return resultStats, url
     
 def printRow(list):
     #Takes a list and prints it on a line, elements separated by commas
@@ -150,6 +160,11 @@ def printHelp():
     #Prints the README.md file as help
     helptext = open('README.md').read()
     print helptext
+    
+def randomUserAgent():
+    #Return a random user agent from the ones listed in the file Useragents.txt
+    useragents = open('Useragents.txt').readlines()
+    return str(random.choice(useragents)).rstrip('\n')
     
 if __name__ == '__main__':
     main()

@@ -3,6 +3,8 @@ GCorpusAnalytics
 
 A python project to serialize queries on the number of items in google corpora, just books for the moment.
 
+**WARNING: This project is still in beta phase, and sometimes produces erroneous results.**
+
 Python version: 2.*
 
 To read help, pass the argument help:

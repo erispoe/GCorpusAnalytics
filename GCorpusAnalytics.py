@@ -39,7 +39,7 @@ def main():
         #Query all queries with a null result
         #When created, all queries have a null result, therefore all queries are processed the first time
         #Sometime a query gets an erroneous null result (0), processing three times the list of null queries reduces the risk of false null results
-        for i in range(3):
+        for i in range(5):
             qwz = queriesWithZero(queries)
             if len(qwz) > 0:
                 random.shuffle(qwz)

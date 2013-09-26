@@ -5,50 +5,65 @@ import csv
 import time
 import sys
 import random
+import json
+from pprint import pprint
 
 def main():
+    #Check if the script argument is help to display the readme file
     if sys.argv[1].lower() == 'help':
         printHelp()
-    else:
-        corpus = str(sys.argv[1]).lower()
-        y1 = int(sys.argv[2])
-        y2 = int(sys.argv[3])
-        it = int(sys.argv[4])
     
-        #Creates the list of expressions to query from the expression file
-        expressionsfile = open(sys.argv[5])
-        expressions = []
-        for line in expressionsfile:
-            expressions.append(str(line).rstrip('\n'))
-
-        outfilepath = ''
-        try:
-            outfilepath = sys.argv[6]
-        except:
-            pass
+    else:
+        reqfile = open(sys.argv[1]).read()
+        reqdic = json.loads(reqfile)
+        req = Request(reqdic)
         
-        queries = []
+        for i in range(5):
+            req.runQueries()
+        req.exportResults()
+
+class Request:
+    #A request with all its parameters and the list of individual queries
+    
+    def __init__(self, reqdic):
+        self.reqdic = reqdic
+        
+        self.corpus = reqdic['Request']['Corpus'].lower()
+        self.y1 = int(reqdic['Request']['YearDebut'])
+        self.y2 = int(reqdic['Request']['YearEnd'])
+        self.it = int(reqdic['Request']['TimeInterval'])
+        self.lr = reqdic['Request']['Language'].lower()
+        
+        self.outfilepath = reqdic['Request']['Outfile']
+        
+        self.expressions = []
+        for e in reqdic['Request']['Expressions']:
+            self.expressions.append(e['Expression'])
+        pprint(self.expressions)
+        
+        self.queries = []
         
         #Create the list of datespans and one query object per datespan per expression
-        for span in makeDatelist(y1, y2, it):
+        for span in makeDatelist(self.y1, self.y2, self.it):
             d1 = span[0]
             d2 = span[1]
-            for e in expressions:
-                queries.append(Query(corpus, d1, d2, e))
+            for e in self.expressions:
+                self.queries.append(Query(self.corpus, d1, d2, e))
         
+    def runQueries(self):
         #Query all queries with a null result
         #When created, all queries have a null result, therefore all queries are processed the first time
-        #Sometime a query gets an erroneous null result (0), processing three times the list of null queries reduces the risk of false null results
-        for i in range(5):
-            qwz = queriesWithZero(queries)
-            if len(qwz) > 0:
-                random.shuffle(qwz)
-                for q in qwz:
-                    time.sleep(random.uniform(1, 3))
-                    q.makeQuery()
+        qwz = nullQueries(self.queries)
+        if len(qwz) > 0:
+            random.shuffle(qwz)
+            for q in qwz:
+                time.sleep(random.uniform(1, 3))
+                q.makeQuery()
                     
-        if outfilepath != '':
-            exportToCsv(queries, len(expressions), outfilepath)
+    def exportResults(self):
+        print "Export of results"
+        if self.outfilepath != '':
+            exportToCsv(self.queries, len(self.expressions), self.outfilepath)
                 
 class Query:
     
@@ -70,7 +85,7 @@ class Query:
     def getNum(self):
         return self.num
 
-def queriesWithZero(queries):
+def nullQueries(queries):
     #Returns a list of queries with a resultStats of zero
     qwz = []
     for q in queries:

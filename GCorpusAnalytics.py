@@ -6,6 +6,7 @@ import time
 import sys
 import random
 import json
+import sqlite3 as lite
 from pprint import pprint
 
 def main():
@@ -14,41 +15,111 @@ def main():
         printHelp()
     
     else:
-        reqfile = open(sys.argv[1]).read()
-        reqdic = json.loads(reqfile)
-        req = Request(reqdic)
+        reqname = str(sys.argv[1]).split('.')[-2]
         
-        for i in range(5):
-            req.runQueries()
-        req.exportResults()
+        req = ''
+        if str(sys.argv[1]).split('.')[-1] == 'json':
+            jsonstr = open(sys.argv[1]).read()
+            req = Request(reqname, jsonstr)
+        if str(sys.argv[1]).split('.')[-1] == 'db':
+            req = Request(reqname)
+        
+        req.executeNullQueries()
 
 class Request:
     #A request with all its parameters and the list of individual queries
     
-    def __init__(self, reqdic):
-        self.reqdic = reqdic
+    def __init__(self, name, jsonstr=''):
         
-        self.corpus = reqdic['Request']['Corpus'].lower()
-        self.y1 = int(reqdic['Request']['YearDebut'])
-        self.y2 = int(reqdic['Request']['YearEnd'])
-        self.it = int(reqdic['Request']['TimeInterval'])
-        self.lr = reqdic['Request']['Language'].lower()
+        self.name = name
         
-        self.outfilepath = reqdic['Request']['Outfile']
+        #Create a dictionnary from the JSON request, either from the json file or retrieved a previously created the database
+        self.reqdic = {}
+        if jsonstr != '':
+            self.reqdic = json.loads(jsonstr)
+        else:
+            self.reqdic = json.loads(self.getJsonInDb())
+        
+        self.corpus = self.reqdic['Request']['Corpus'].lower()
+        self.y1 = int(self.reqdic['Request']['YearDebut'])
+        self.y2 = int(self.reqdic['Request']['YearEnd'])
+        self.it = int(self.reqdic['Request']['TimeInterval'])
+        self.lr = self.reqdic['Request']['Language'].lower()
+        
+        self.outfilepath = self.reqdic['Request']['Outfile']
         
         self.expressions = []
-        for e in reqdic['Request']['Expressions']:
+        for e in self.reqdic['Request']['Expressions']:
             self.expressions.append(e['Expression'])
-        pprint(self.expressions)
         
-        self.queries = []
+        if jsonstr != '':
+            self.createDatabase(jsonstr)
+            self.createQueries()
         
-        #Create the list of datespans and one query object per datespan per expression
+    def getJsonInDb(self):
+        conn = lite.connect(self.name + '.db', isolation_level=None)
+        c = conn.cursor()
+        sql="SELECT json FROM TheRequest WHERE Id = 1"
+        c.execute(sql)
+        jsonstr = str(c.fetchone()[0])
+        return jsonstr
+    
+    def createQueries(self):
+        conn = lite.connect(self.name + '.db', isolation_level=None)
+        c = conn.cursor()
         for span in makeDatelist(self.y1, self.y2, self.it):
             d1 = span[0]
             d2 = span[1]
+            
+            YYYY1 = str(d1.timetuple()[0])
+            MM1 = str(d1.timetuple()[1])
+            DD1 = str(d1.timetuple()[2])
+    
+            YYYY2 = str(d2.timetuple()[0])
+            MM2 = str(d2.timetuple()[1])
+            DD2 = str(d2.timetuple()[2])
+            
             for e in self.expressions:
-                self.queries.append(Query(self.corpus, d1, d2, e))
+                sql = "INSERT INTO Queries(corpus, date1, date2, expression, url, result, numbofexec) VALUES(:corpus, :date1, :date2, :expression, :url, :result, :numbofexec)"
+                qdic = {'corpus' : self.corpus, 'date1' : YYYY1 + MM1 + DD1, 'date2' :  YYYY2 + MM2 + DD2, 'expression' : e, 'url' : makeURL(self.corpus, e, d1, d2), 'result' : 0 , 'numbofexec' : 0}
+                c.execute(sql, qdic)
+        conn.close()
+                
+    def readQueries(self):
+        conn = lite.connect(self.name + '.db', isolation_level=None)
+        c = conn.cursor()
+        sql = "SELECT * FROM Queries"
+        c.execute(sql)
+        pprint(c.fetchall())
+        conn.close()
+        
+    def executeNullQueries(self):
+        conn = lite.connect(self.name + '.db', isolation_level=None)
+        c = conn.cursor()
+        i = 0
+        while i == 0:
+            try:
+                sql='SELECT Id, url, numbofexec, date1, date2, expression FROM Queries WHERE result = 0 AND numbofexec <= 5 ORDER by RANDOM() LIMIT 1'
+                c = conn.execute(sql)
+                query = c.fetchone()
+                #print query
+                Id = query[0]
+                url = query[1]
+                numbofexec = int(query[2])
+                result = getResults(url)
+                #print result
+                print str(query[3])[:4] + '-' + str(query[4])[:4], str(query[5]), result
+                updateresult = "UPDATE Queries SET result = " + str(result) + ", numbofexec = " + str(numbofexec + 1) + " WHERE Id = " + str(Id)
+                c = conn.execute(updateresult)
+            except TypeError,e:    
+                    print "All queries executed and results retrieved"
+                    i = 1
+            except Exception,e:
+                    print "Google may have blocked your IP temporarily, retry later by passing the database file to the python script:"
+                    print "python GCorpusAnalytics.py " + self.name + ".db"
+                    print "The requests will restart where they stopped here."
+                    i = 1
+        conn.close()
         
     def runQueries(self):
         #Query all queries with a null result
@@ -59,41 +130,35 @@ class Request:
             for q in qwz:
                 time.sleep(random.uniform(1, 3))
                 q.makeQuery()
+                
+    def createDatabase(self, jsonstr):
+        dbname = self.name + '.db'
+        conn = lite.connect(dbname, isolation_level=None)
+        c = conn.cursor()
+    
+        c.execute("DROP TABLE IF EXISTS Queries")
+        c.execute("DROP TABLE IF EXISTS TheRequest")
+        
+        createTableQueries = '''CREATE TABLE Queries
+                 (Id INTEGER PRIMARY KEY AUTOINCREMENT, corpus TEXT, date1 DATE, date2 DATE, expression TEXT, url TEXT, result INTEGER, numbofexec INTEGER)'''
+        createTableTheRequest = "CREATE TABLE TheRequest (Id INTEGER PRIMARY KEY AUTOINCREMENT, json TEXT)"
+        c.execute(createTableTheRequest)
+        c.execute(createTableQueries)
+        
+        jsondic = {'json' : jsonstr}
+        sql = "INSERT INTO TheRequest(json) VALUES(:json)"
+        c.execute(sql, jsondic)
+        
+        conn.close()
                     
     def exportResults(self):
         print "Export of results"
         if self.outfilepath != '':
             exportToCsv(self.queries, len(self.expressions), self.outfilepath)
-                
-class Query:
-    
-    def __init__(self, corpus, d1, d2, expression):
-        self.corpus = corpus
-        self.d1 = d1
-        self.d2 = d2
-        self.expression = expression
-        self.url = makeURL(self.corpus, self.expression, self.d1, self.d2)
-        self.num = 0
-    
-    def printArgs(self):
-        print self.corpus, self.d1, self.d2, self.expression, self.num
-        
-    def makeQuery(self):
-        self.num = getResults(self.url)
-        print self.d1.year, self.d2.year, self.expression, self.num
-        
-    def getNum(self):
-        return self.num
-
-def nullQueries(queries):
-    #Returns a list of queries with a resultStats of zero
-    qwz = []
-    for q in queries:
-        if q.getNum() == 0:
-            qwz.append(q)
-    return qwz
 
 def exportToCsv(queries, nex, outfilepath):
+    #OUTDATED
+    
     #Export a list of queries into to csv files, one wih the resultats, the other with the url, for controlling purposes
     #queries: the list of query objects to export to csv, sorted
     #nex: the number of expressions
@@ -183,21 +248,25 @@ def makeDatelist(y1, y2, it):
         datelist.append(dates)
     return datelist
     
-def makeURL(corpus, expression, date1, date2):
+def makeURL(corpus, expression, d1, d2):
     #Return the query URL
     
     expression = makeSafe(expression)
     
-    YYYY1 = str(date1.timetuple()[0])
-    MM1 = str(date1.timetuple()[1])
-    DD1 = str(date1.timetuple()[2])
-    
-    YYYY2 = str(date2.timetuple()[0])
-    MM2 = str(date2.timetuple()[1])
-    DD2 = str(date2.timetuple()[2])
-    
     if corpus == 'books':
-        return 'http://www.google.com/search?hl=en&newwindow=1&q=' + expression + '&safe=off&tbm=bks&tbs=bkt:b%2Ccdr%3A1%2Ccd_min%3A' + MM1 +'%2F' + DD1 + '%2F' + YYYY1 + '%2Ccd_max%3A' + MM2 + '%2F' + DD2 + '%2F' + YYYY2
+        return 'http://www.google.com/search?hl=en&newwindow=1&q=' + expression + '&safe=off&tbm=bks&tbs=bkt:b%2C' + timeMapper(d1, d2)
+
+def timeMapper(d1, d2):
+    
+    YYYY1 = str(d1.timetuple()[0])
+    MM1 = str(d1.timetuple()[1])
+    DD1 = str(d1.timetuple()[2])
+
+    YYYY2 = str(d2.timetuple()[0])
+    MM2 = str(d2.timetuple()[1])
+    DD2 = str(d2.timetuple()[2])
+    
+    return makeSafe('cdr:1,cd_min:' + MM1 + '/' + DD1 + '/' + YYYY1 + ',cd_max:' + MM2 + '/' + DD2 + '/' + YYYY2)
 
 def elementCounter(soup):
     #Returns the number of items in the first page of results

@@ -10,14 +10,28 @@ Python version: 2.*
 To read help, pass the argument help:
 python GCorpusAnalytics.py help
 
-The arguments for using this script are
-python GCorpusAnalytics.py GoogleCorpus year_debut year_end time_interval expressions_file output_file
+The script takes in argument a JSON file with your request. See Request.json for an example.
 
-All arguments are required, apart from the output file.
+The JSON file needs to contain the following parameters:
 
-GCorpusAnalytics is a python script that serializes queries to google corpora (only google books for the moment). For each interval of time_interval years between year_debut and year_end, the script will query the given google_corpus (here, books) for the number of items corresponding to each line in the passed expressions_file.
+- Corpus: only “books” at the moment
+- YearDebut: first year of the date interval
+- YearEnd: last year of the date interval
+- TimeInterval: interval in years (minimum 1 for one query per year)
+- Language: only “en” at the moment
+- Outfile: name of the csv file to export
+- Expressions: list of expressions to query for every date interval. Keep in mind that these can include Google valid search operators.
 
-It will return a CSV output_file that can be read by any spreadsheet software (LibreOffice, Excel, Google Drive…). If you don't provide an output_file, the script will just print the results on the terminal.
+Open a terminal in the folder where both your JSON request file and the script are located. The script runs in two phases:
+
+1. Execute to query the results:
+python GCorpusAnalytics.py Request.json execute
+If the script gets blocked by Google, retry later, this time with the db file where temporary results are stored:
+python GCorpusAnalytics.py Request.db execute
+The script will restart to query results where it got stopped.
+
+2. When notified “All queries executed and results retrieved”, to export in csv:
+python GCorpusAnalytics.py Request.db export
 
 For an example, see: http://www.favre-bulle.com/?p=7
 
@@ -27,9 +41,13 @@ Dependancies
 GCorpusAnalytics depends on the following python packages:
 - urllib2
 - datetime
+- time
 - csv
 - time
 - sys
+- sqlite3
+- json
+- pprint
 - Beautifulsoup
 
 All but Beautifulsoup are usually included by default in any python installation. Beautifulsoup is used to parse the webpage google returns and extract the number of results.

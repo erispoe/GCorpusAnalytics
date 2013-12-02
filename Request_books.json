@@ -1,17 +1,17 @@
 {
     "Request": {
         "Corpus": "books",
-        "YearDebut": "1870",
-        "YearEnd": "1950",
-        "TimeInterval": "10",
+        "YearDebut": "1990",
+        "YearEnd": "2011",
+        "TimeInterval": "1",
         "Language": "en",
         "Outfile": "results.csv",
         "Expressions": [
             {
-                "Expression": "\"direct democracy\""
+                "Expression": "internet"
             },
             {
-                "Expression": "\"direct democracy\" switzerland"
+                "Expression": "internet virtual"
             }
         ]
     }

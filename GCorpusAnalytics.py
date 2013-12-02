@@ -24,7 +24,16 @@ def main():
         if str(sys.argv[1]).split('.')[-1] == 'db':
             req = Request(reqname)
         
-        req.executeNullQueries()
+        action = ''
+        try:
+            if str(sys.argv[2]).lower() == 'execute':
+                print "Executing the queries"
+                req.executeNullQueries()
+            if str(sys.argv[2]).lower() == 'exportcsv':
+                print "Exporting the results in CSV"
+                req.exportToCsv()
+        except:
+            pass
 
 class Request:
     #A request with all its parameters and the list of individual queries
@@ -151,55 +160,48 @@ class Request:
         
         conn.close()
                     
-    def exportResults(self):
-        print "Export of results"
-        if self.outfilepath != '':
-            exportToCsv(self.queries, len(self.expressions), self.outfilepath)
-
-def exportToCsv(queries, nex, outfilepath):
-    #OUTDATED
-    
-    #Export a list of queries into to csv files, one wih the resultats, the other with the url, for controlling purposes
-    #queries: the list of query objects to export to csv, sorted
-    #nex: the number of expressions
-    #outfilepath: the path of the csv file to export
-    
-    controlfilepath = outfilepath.rstrip('.csv') + '_urlcontrol.csv'
-    controlfile = open(controlfilepath, 'w')
-    outfile = open(outfilepath, 'w')
-    
-    wr = csv.writer(outfile, quoting=csv.QUOTE_ALL)
-    wrc = csv.writer(controlfile, quoting=csv.QUOTE_ALL)
-    
-    #Let's assume the queries are sorted
-    #Which they should be because they are created sorted and all operations take place on another instance of the list
-    
-    datamodel = []
-    datamodel.append('Timespan')
-    
-    for i in range(nex):
-        datamodel.append(queries[i].expression)
+            
+    def exportToCsv(self):
+        #Export a list of queries into to csv files, one wih the resultats, the other with the url, for controlling purposes
+        dbname = self.name + '.db'
+        conn = lite.connect(dbname, isolation_level=None)
+        c = conn.cursor()
         
-    wr.writerow(datamodel)
-    wrc.writerow(datamodel)
-    
-    while len(queries) > 0:
-        d1 = queries[0].d1
-        d2 = queries[0].d2
-        resultrow = []
-        urlrow = []
-        strspan = str(d1.year)
-        if d1.year != d2.year:
-            strspan = str(d1.year) + '-' + str(d2.year)
-        resultrow.append(strspan)
-        urlrow.append(strspan)
-        for i in range(nex):
-            resultrow.append(queries[0].num)
-            urlrow.append(queries[0].url)
-            del queries[0]
-        wr.writerow(resultrow)
-        wrc.writerow(urlrow)
-    
+        expquery = c.execute('SELECT expression FROM Queries GROUP BY expression').fetchall()
+        expressions = []
+        for i in expquery:
+            expressions.append(i[0])
+        
+        spans = c.execute('SELECT date1, date2 FROM Queries GROUP BY date1, date2').fetchall()
+        
+        datamodel = []
+        datamodel.append('Timespan')
+        datamodel = datamodel + expressions
+        
+        controlfilepath = self.name + '_urlcontrol.csv'
+        outfilepath = self.name + '.csv'
+        controlfile = open(controlfilepath, 'w')
+        outfile = open(outfilepath, 'w')
+        wr = csv.writer(outfile, quoting=csv.QUOTE_ALL)
+        wrc = csv.writer(controlfile, quoting=csv.QUOTE_ALL)
+        
+        wr.writerow(datamodel)
+        wrc.writerow(datamodel)
+        
+        for s in spans:
+            strspan = str(s[0])[:4] + '-' + str(s[1])[:4]
+            d1 = str(s[0])
+            d2 = str(s[1])
+            results = [strspan]
+            urls = [strspan]
+            for e in expressions:
+                #e = str(e)
+                sql = 'SELECT result, url FROM Queries WHERE date1 = ' + d1 + ' AND date2 = ' + d2 + ' AND expression = \'' + e + '\''
+                r = c.execute(sql).fetchone()
+                results.append(r[0])
+                urls.append(r[1])
+            wr.writerow(results)
+            wrc.writerow(urls)
 
 def getResults(url):
     #Query Google to return the numbers of items corresponding to the query url
@@ -251,10 +253,8 @@ def makeDatelist(y1, y2, it):
 def makeURL(corpus, expression, d1, d2):
     #Return the query URL
     
-    expression = makeSafe(expression)
-    
     if corpus == 'books':
-        return 'http://www.google.com/search?hl=en&newwindow=1&q=' + expression + '&safe=off&tbm=bks&tbs=bkt:b%2C' + timeMapper(d1, d2)
+        return makeSafe('http://www.google.com/search?hl=en&newwindow=1&q=' + expression + '&safe=off&tbm=bks&tbs=bkt:b%2C' + timeMapper(d1, d2))
 
 def timeMapper(d1, d2):
     

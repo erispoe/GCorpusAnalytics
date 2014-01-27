@@ -13,5 +13,5 @@ setup(name='GCorpusAnalytics',
       #    "bs4 >= 4.3.1",
       #    "csv >= 1.0",
       #    "json >= 2.0.9",
-      ],
+      #],
      )

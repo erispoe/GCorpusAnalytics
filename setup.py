@@ -12,7 +12,7 @@ setup(name='GCorpusAnalytics',
       packages=['GCorpusAnalytics'],
       long_description=open('README.md').read(),
       install_requires=[
-          "bs4 >= 4.3.1"
+          "beautifulsoup4 >= 4.3.1"
       #    "csv >= 1.0",
       #    "json >= 2.0.9",
       ],

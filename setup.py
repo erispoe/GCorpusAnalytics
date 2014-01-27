@@ -12,8 +12,16 @@ setup(name='GCorpusAnalytics',
       packages=['GCorpusAnalytics'],
       long_description=open('README.md').read(),
       install_requires=[
-          "beautifulsoup4 >= 4.3.1"
-      #    "csv >= 1.0",
-      #    "json >= 2.0.9",
+          "beautifulsoup4 >= 4.3.1",
+      ],
+      classifiers=[
+          'Programming Language :: Python :: 2',
+          'Development Status :: 3 - Alpha',
+          'Environment :: Console',
+          'Intended Audience :: Science/Research',
+          'License :: OSI Approved :: GNU General Public License (GPL)',
+          'Natural Language :: English',
+          'Operating System :: OS Independent',
+          'Topic :: Scientific/Engineering :: Information Analysis',
       ],
      )

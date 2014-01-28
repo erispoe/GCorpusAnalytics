@@ -124,6 +124,7 @@ class Request:
                     print "All queries executed and results retrieved"
                     i = 1
             except Exception,e:
+                    print "Oups, there's an error here:", e
                     print "Google may have blocked your IP temporarily, retry later by passing the database file to the python script:"
                     print "python GCorpusAnalytics.py " + self.name + ".db"
                     print "The requests will restart where they stopped here."
@@ -231,7 +232,7 @@ def getResults(url):
 
 def randomUserAgent():
     #Return a random user agent from the ones listed in the file Useragents.txt
-    useragents = open('Useragents.txt').readlines()
+    useragents = open('Data/Useragents.txt').readlines()
     return str(random.choice(useragents)).rstrip('\n')
 
 def makeSafe(expression):

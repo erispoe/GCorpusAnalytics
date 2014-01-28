@@ -28,7 +28,7 @@ def main():
         try:
             if str(sys.argv[2]).lower() == 'execute':
                 print "Executing the queries"
-                req.executeNullQueries()
+                req.execute()
             if str(sys.argv[2]).lower() == 'exportcsv':
                 print "Exporting the results in CSV"
                 req.exportToCsv()
@@ -102,7 +102,7 @@ class Request:
         pprint(c.fetchall())
         conn.close()
         
-    def executeNullQueries(self):
+    def execute(self):
         conn = lite.connect(self.name + '.db', isolation_level=None)
         c = conn.cursor()
         i = 0

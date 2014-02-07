@@ -288,5 +288,9 @@ def printHelp():
     helptext = open('README.md').read()
     print helptext
 
+def HelloWorld():
+    #To test package installation
+    print "Hello World!"
+
 if __name__ == '__main__':
     main()

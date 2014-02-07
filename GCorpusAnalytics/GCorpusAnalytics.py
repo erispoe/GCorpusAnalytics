@@ -232,7 +232,7 @@ def getResults(url):
 
 def randomUserAgent():
     #Return a random user agent from the ones listed in the file Useragents.txt in the GitHub repo
-    uaurl = 'http://github.com/Erispoe/GCorpusAnalytics/raw/create-package/GCorpusAnalytics/Data/Useragents.txt'
+    uaurl = 'http://github.com/Erispoe/GCorpusAnalytics/raw/master/GCorpusAnalytics/Data/Useragents.txt'
     useragents = urllib.urlopen(uaurl).readlines()
     return random.choice(useragents)
 

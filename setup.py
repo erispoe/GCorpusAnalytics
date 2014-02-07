@@ -11,6 +11,7 @@ setup(name='GCorpusAnalytics',
       url='https://github.com/Erispoe/GCorpusAnalytics',
       packages=['GCorpusAnalytics'],
       long_description=open('README.md').read(),
+      package_data= {'Useragents': ['data/Useragents.txt']},
       install_requires=[
           "beautifulsoup4 >= 4.3.1",
       ],

@@ -232,7 +232,7 @@ def getResults(url):
 
 def randomUserAgent():
     #Return a random user agent from the ones listed in the file Useragents.txt
-    useragents = open('Data/Useragents.txt').readlines()
+    useragents = open('data/Useragents.txt').readlines()
     return str(random.choice(useragents)).rstrip('\n')
 
 def makeSafe(expression):

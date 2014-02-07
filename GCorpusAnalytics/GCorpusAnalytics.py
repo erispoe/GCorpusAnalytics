@@ -291,6 +291,10 @@ def printHelp():
 def HelloWorld():
     #To test package installation
     print "Hello World!"
+    
+def readUA():
+    #Test to read the user agents file
+    print Useragents
 
 if __name__ == '__main__':
     main()

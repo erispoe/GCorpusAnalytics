@@ -28,7 +28,7 @@ def main():
         try:
             if str(sys.argv[2]).lower() == 'execute':
                 print "Executing the queries"
-                req.executeNullQueries()
+                req.execute()
             if str(sys.argv[2]).lower() == 'exportcsv':
                 print "Exporting the results in CSV"
                 req.exportToCsv()
@@ -102,7 +102,7 @@ class Request:
         pprint(c.fetchall())
         conn.close()
         
-    def executeNullQueries(self):
+    def execute(self):
         conn = lite.connect(self.name + '.db', isolation_level=None)
         c = conn.cursor()
         i = 0
@@ -124,6 +124,7 @@ class Request:
                     print "All queries executed and results retrieved"
                     i = 1
             except Exception,e:
+                    print "Oups, there's an error here:", e
                     print "Google may have blocked your IP temporarily, retry later by passing the database file to the python script:"
                     print "python GCorpusAnalytics.py " + self.name + ".db"
                     print "The requests will restart where they stopped here."
@@ -230,9 +231,10 @@ def getResults(url):
     return resultStats
 
 def randomUserAgent():
-    #Return a random user agent from the ones listed in the file Useragents.txt
-    useragents = open('Useragents.txt').readlines()
-    return str(random.choice(useragents)).rstrip('\n')
+    #Return a random user agent from the ones listed in the file Useragents.txt in the GitHub repo
+    uaurl = 'http://github.com/Erispoe/GCorpusAnalytics/raw/create-package/GCorpusAnalytics/Data/Useragents.txt'
+    useragents = urllib.urlopen(uaurl).readlines()
+    return random.choice(useragents)
 
 def makeSafe(expression):
     #Takes a string and returns html safe strings

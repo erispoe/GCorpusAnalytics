@@ -231,8 +231,9 @@ def getResults(url):
     return resultStats
 
 def randomUserAgent():
-    #Return a random user agent from the ones listed in the file Useragents.txt
-    useragents = Useragents()
+    #Return a random user agent from the ones listed in the file Useragents.txt in the GitHub repo
+    uaurl = 'http://github.com/Erispoe/GCorpusAnalytics/raw/create-package/GCorpusAnalytics/Data/Useragents.txt'
+    useragents = urllib.urlopen(uaurl).readlines()
     return random.choice(useragents)
 
 def makeSafe(expression):
@@ -287,13 +288,6 @@ def printHelp():
     #Prints the README.md file as help
     helptext = open('README.md').read()
     print helptext
-    
-def Useragents():
-    uaurl = 'https://github.com/Erispoe/GCorpusAnalytics/blob/create-package/GCorpusAnalytics/Data/Useragents.txt'
-    request=urllib.Request(uaurl,None,headers)
-    print request
-    print type(request)
-    return request
 
 if __name__ == '__main__':
     main()

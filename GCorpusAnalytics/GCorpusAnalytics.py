@@ -31,7 +31,7 @@ def main():
                 req.execute()
             if str(sys.argv[2]).lower() == 'exportcsv':
                 print "Exporting the results in CSV"
-                req.exportToCsv()
+                req.exportCsv()
         except:
             pass
 
@@ -162,7 +162,7 @@ class Request:
         conn.close()
                     
             
-    def exportToCsv(self):
+    def exportCsv(self):
         #Export a list of queries into to csv files, one wih the resultats, the other with the url, for controlling purposes
         dbname = self.name + '.db'
         conn = lite.connect(dbname, isolation_level=None)

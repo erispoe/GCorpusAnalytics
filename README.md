@@ -10,6 +10,8 @@ Python version: 2.*
 To read help, pass the argument help:
 python GCorpusAnalytics.py help
 
+## Formatting your request
+
 The script takes in argument a JSON file with your request. See Request.json for an example.
 
 The JSON file needs to contain the following parameters:
@@ -22,6 +24,8 @@ The JSON file needs to contain the following parameters:
 - Outfile: name of the csv file to export
 - Expressions: list of expressions to query for every date interval. Keep in mind that these can include Google valid search operators.
 
+## Use in command line
+
 Open a terminal in the folder where both your JSON request file and the script are located. The script runs in two phases:
 
 1. Execute to query the results:
@@ -31,31 +35,26 @@ python GCorpusAnalytics.py Request.db execute
 The script will restart to query results where it got stopped.
 
 2. When notified “All queries executed and results retrieved”, to export in csv:
-python GCorpusAnalytics.py Request.db export
+python GCorpusAnalytics.py Request.db exportcsv
+
+## Use as a package
+
+GCorpusAnalytics can be imported as a package directly in another python script. To do so, install it with pip in the console:
+
+pip install https://github.com/Erispoe/GCorpusAnalytics/zipball/master
+
+You can then import it in a python script and use the class Request. To create a class Request, pass it a name and a JSON string with the request. You can then execute the request or export its results in csv.
+
+from GCorpusAnalytics import GCorpusAnalytics as gca
+r = gca.Request('Request_books',open('Request_books.json').read())
+r.execute()
+r.exportCsv()
+
+The script will create a database file with the same name of your request in the same directory of your python script. This database file contains all the informations to relaunch the request if it gets blocked by Google
+
+If the script gets blocked by Google, retry later, recreating the Request by giving it only a name, and it will retrieve all request informations and already parsed results in the database file.
+
+## See an example
 
 For an example, see: http://www.favre-bulle.com/?p=7
 
-Dependancies
-------------
-
-GCorpusAnalytics depends on the following python packages:
-- urllib2
-- datetime
-- time
-- csv
-- time
-- sys
-- sqlite3
-- json
-- pprint
-- Beautifulsoup
-
-All but Beautifulsoup are usually included by default in any python installation. Beautifulsoup is used to parse the webpage google returns and extract the number of results.
-
-If you have Easy install or Pip installed, just type:
-easy_install beautifulsoup4
-or
-pip install beautifulsoup4
-
-If not, the details of python installation can be found here:
-http://docs.python.org/2/install/

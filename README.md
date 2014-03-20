@@ -8,6 +8,7 @@ A python project to serialize queries on the number of items in google corpora, 
 Python version: 2.*
 
 To read help, pass the argument help:    
+
 	python GCorpusAnalytics.py help
 
 ## Formatting your request

@@ -54,6 +54,7 @@ class Request:
         self.y2 = int(self.reqdic['Request']['YearEnd'])
         self.it = int(self.reqdic['Request']['TimeInterval'])
         self.lr = self.reqdic['Request']['Language'].lower()
+        self.nullthreshold = int(self.reqdic['Request']['NullThreshold'])
         
         self.outfilepath = self.reqdic['Request']['Outfile']
         
@@ -108,7 +109,7 @@ class Request:
         i = 0
         while i == 0:
             try:
-                sql='SELECT Id, url, numbofexec, date1, date2, expression FROM Queries WHERE result = 0 AND numbofexec <= 5 ORDER by RANDOM() LIMIT 1'
+                sql='SELECT Id, url, numbofexec, date1, date2, expression FROM Queries WHERE result <= ' + str(self.nullthreshold) + ' AND numbofexec <= 5 ORDER by RANDOM() LIMIT 1'
                 c = conn.execute(sql)
                 query = c.fetchone()
                 #print query

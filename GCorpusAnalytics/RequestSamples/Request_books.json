@@ -6,6 +6,7 @@
         "TimeInterval": "1",
         "Language": "en",
         "Outfile": "results.csv",
+        "NullThreshold" : "100",
         "Expressions": [
             {
                 "Expression": "internet"

@@ -23,6 +23,7 @@ The JSON file needs to contain the following parameters:
 - TimeInterval: interval in years (minimum 1 for one query per year)
 - Language: only “en” at the moment
 - Outfile: name of the csv file to export
+- NullThreshold: all results inferior or equal to this threshold will be re-queried multiple times to reduce risk of errors
 - Expressions: list of expressions to query for every date interval. Keep in mind that these can include Google valid search operators.
 
 For instance, for a Google Books query:
@@ -35,6 +36,7 @@ For instance, for a Google Books query:
         	"TimeInterval": "1",    
         	"Language": "en",    
         	"Outfile": "results.csv",    
+					"NullThreshold": "100",
         	"Expressions": [    
             	{    
                 	"Expression": "internet"     

@@ -29,26 +29,26 @@ The JSON file needs to contain the following parameters:
 Open a terminal in the folder where both your JSON request file and the script are located. The script runs in two phases:
 
 1. Execute to query the results:    
-python GCorpusAnalytics.py Request.json execute    
+	python GCorpusAnalytics.py Request.json execute    
 If the script gets blocked by Google, retry later, this time with the db file where temporary results are stored:    
-python GCorpusAnalytics.py Request.db execute    
+	python GCorpusAnalytics.py Request.db execute    
 The script will restart to query results where it got stopped.
 
 2. When notified “All queries executed and results retrieved”, to export in csv:    
-python GCorpusAnalytics.py Request.db exportcsv
+	python GCorpusAnalytics.py Request.db exportcsv
 
 ## Use as a package
 
 GCorpusAnalytics can be imported as a package directly in another python script. To do so, install it with pip in the console:
 
-pip install https://github.com/Erispoe/GCorpusAnalytics/zipball/master
+	pip install https://github.com/Erispoe/GCorpusAnalytics/zipball/master
 
 You can then import it in a python script and use the class Request. To create a class Request, pass it a name and a JSON string with the request. You can then execute the request or export its results in csv.
 
-from GCorpusAnalytics import GCorpusAnalytics as gca    
-r = gca.Request('Request_books',open('Request_books.json').read())    
-r.execute()    
-r.exportCsv()    
+	from GCorpusAnalytics import GCorpusAnalytics as gca    
+	r = gca.Request('Request_books',open('Request_books.json').read())    
+	r.execute()    
+	r.exportCsv()    
 
 The script will create a database file with the same name of your request in the same directory of your python script. This database file contains all the informations to relaunch the request if it gets blocked by Google
 

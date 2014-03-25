@@ -8,6 +8,7 @@ import random
 import json
 import sqlite3 as lite
 from pprint import pprint
+import re
 
 def main():
     #Check if the script argument is help to display the readme file
@@ -276,10 +277,11 @@ def elementCounter(soup):
     return len(soup.find_all("div", {"class": "rc"}))
     
 def noResults(soup):
-    #Returns True is the page contains a no results alter
+    #Returns True is the page contains a no results alert
     r = False
     try:
-        if str(soup.find("div", {"id": "topstuff"}).find_all("div", {"class": "med"})[0].find_all("img")[0]['src']) == '/images/yellow-alert2x.png':
+        t = soup.find(id="topstuff").find(text=re.compile("No results found for"))
+        if t:
             r = True
     except:
         pass

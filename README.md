@@ -36,7 +36,7 @@ For instance, for a Google Books query:
         	"TimeInterval": "1",    
         	"Language": "en",    
         	"Outfile": "results.csv",    
-					"NullThreshold": "100",
+				"NullThreshold": "100",
         	"Expressions": [    
             	{    
                 	"Expression": "internet"     

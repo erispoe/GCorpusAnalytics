@@ -55,8 +55,14 @@ class Request:
         self.y2 = int(self.reqdic['Request']['YearEnd'])
         self.it = int(self.reqdic['Request']['TimeInterval'])
         self.lr = self.reqdic['Request']['Language'].lower()
-        self.nullthreshold = int(self.reqdic['Request']['NullThreshold'])
         
+        # NullThreshold value
+        # When the results are inferior or equal to the NullThreshold, it will be requeried
+        # 0 by default
+        self.nullthreshold = 0
+        if self.reqdic['Request']['NullThreshold']:
+        	self.nullthreshold = int(self.reqdic['Request']['NullThreshold'])
+        	
         self.outfilepath = self.reqdic['Request']['Outfile']
         
         self.expressions = []

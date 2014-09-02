@@ -55,6 +55,12 @@ class Request:
         self.y2 = int(self.reqdic['Request']['YearEnd'])
         self.it = int(self.reqdic['Request']['TimeInterval'])
         self.lr = self.reqdic['Request']['Language'].lower()
+        
+
+        # Patent arguments
+        if 'TypeOfDate' in self.reqdic['Request']:
+            self.ptsdt =  self.reqdic['Request']['TypeOfDate'].lower()
+
         self.nullthreshold = int(self.reqdic['Request']['NullThreshold'])
         
         self.outfilepath = self.reqdic['Request']['Outfile']
@@ -96,6 +102,13 @@ class Request:
                             'd1': d1,
                             'd2': d2,
                             'lr': self.lr}
+
+                if self.corpus == "patents":
+                    if self.ptsdt == "filing":
+                        urlargs['ptsdt'] = 'a'
+                    elif self.ptsdt == "publication":
+                        urlargs['ptsdt'] = 'i'
+
                 qdic = {'corpus' : self.corpus, 'date1' : YYYY1 + MM1 + DD1, 'date2' :  YYYY2 + MM2 + DD2, 'expression' : e, 'url' : makeURL(self.corpus, urlargs), 'result' : 0 , 'numbofexec' : 0}
                 c.execute(sql, qdic)
         conn.close()
@@ -271,6 +284,19 @@ def makeURL(corpus, args):
                         '&tbm=' + tbm + # corpus
                         '&tbs=bkt:b,' + # only book results (i.e. no magazines for instance)
                         'cdr:1,' + timeMapper(args['d1'], args['d2'])) # date formatted by timeMapper
+
+    elif corpus == 'patents':
+        tbm = 'pts'
+        return makeSafe('http://www.google.com/search?' + # base url
+                        '&q=' + args['expression'] + # q for searched expression
+                        '&lr=' + args['lr'] + # language restrict
+                        '&safe=off' + # disable safe search
+                        '&source=lnt' + # all patent offices
+                        '&tbm=' + tbm + # corpus
+                        '&tbs=cdr:1,' + # tbs parameters
+                        'ptsdt:' + args['ptsdt'] + ',' + # type of date, a = filing date, i = publication date
+                        timeMapper(args['d1'], args['d2'])) # date formatted by timeMapper
+
 
 def timeMapper(d1, d2):
     

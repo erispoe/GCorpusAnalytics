@@ -92,7 +92,10 @@ class Request:
             
             for e in self.expressions:
                 sql = "INSERT INTO Queries(corpus, date1, date2, expression, url, result, numbofexec) VALUES(:corpus, :date1, :date2, :expression, :url, :result, :numbofexec)"
-                qdic = {'corpus' : self.corpus, 'date1' : YYYY1 + MM1 + DD1, 'date2' :  YYYY2 + MM2 + DD2, 'expression' : e, 'url' : makeURL(self.corpus, e, d1, d2), 'result' : 0 , 'numbofexec' : 0}
+                urlargs = {'expression': e,
+                            'd1': d1,
+                            'd2': d2}
+                qdic = {'corpus' : self.corpus, 'date1' : YYYY1 + MM1 + DD1, 'date2' :  YYYY2 + MM2 + DD2, 'expression' : e, 'url' : makeURL(self.corpus, urlargs), 'result' : 0 , 'numbofexec' : 0}
                 c.execute(sql, qdic)
         conn.close()
                 
@@ -254,11 +257,11 @@ def makeDatelist(y1, y2, it):
         datelist.append(dates)
     return datelist
     
-def makeURL(corpus, expression, d1, d2):
+def makeURL(corpus, args):
     #Return the query URL
-    
+    #TODO: add a check for the argument object
     if corpus == 'books':
-        return makeSafe('http://www.google.com/search?hl=en&newwindow=1&q=' + expression + '&safe=off&tbm=bks&tbs=bkt:b%2C' + timeMapper(d1, d2))
+        return makeSafe('http://www.google.com/search?hl=en&newwindow=1&q=' + args['expression'] + '&safe=off&tbm=bks&tbs=bkt:b%2C' + timeMapper(args['d1'], args['d2']))
 
 def timeMapper(d1, d2):
     

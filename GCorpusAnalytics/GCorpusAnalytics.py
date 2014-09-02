@@ -94,7 +94,8 @@ class Request:
                 sql = "INSERT INTO Queries(corpus, date1, date2, expression, url, result, numbofexec) VALUES(:corpus, :date1, :date2, :expression, :url, :result, :numbofexec)"
                 urlargs = {'expression': e,
                             'd1': d1,
-                            'd2': d2}
+                            'd2': d2,
+                            'lr': self.lr}
                 qdic = {'corpus' : self.corpus, 'date1' : YYYY1 + MM1 + DD1, 'date2' :  YYYY2 + MM2 + DD2, 'expression' : e, 'url' : makeURL(self.corpus, urlargs), 'result' : 0 , 'numbofexec' : 0}
                 c.execute(sql, qdic)
         conn.close()
@@ -260,8 +261,16 @@ def makeDatelist(y1, y2, it):
 def makeURL(corpus, args):
     #Return the query URL
     #TODO: add a check for the argument object
+
     if corpus == 'books':
-        return makeSafe('http://www.google.com/search?hl=en&newwindow=1&q=' + args['expression'] + '&safe=off&tbm=bks&tbs=bkt:b%2C' + timeMapper(args['d1'], args['d2']))
+        tbm = 'bks'
+        return makeSafe('http://www.google.com/search?' + # base url
+                        '&q=' + args['expression'] + # q for searched expression
+                        '&lr=' + args['lr'] + # language restrict
+                        '&safe=off' + # disable safe search
+                        '&tbm=' + tbm + # corpus
+                        '&tbs=bkt:b,' + # only book results (i.e. no magazines for instance)
+                        'cdr:1,' + timeMapper(args['d1'], args['d2'])) # date formatted by timeMapper
 
 def timeMapper(d1, d2):
     
@@ -273,7 +282,7 @@ def timeMapper(d1, d2):
     MM2 = str(d2.timetuple()[1])
     DD2 = str(d2.timetuple()[2])
     
-    return makeSafe('cdr:1,cd_min:' + MM1 + '/' + DD1 + '/' + YYYY1 + ',cd_max:' + MM2 + '/' + DD2 + '/' + YYYY2)
+    return makeSafe('cd_min:' + MM1 + '/' + DD1 + '/' + YYYY1 + ',cd_max:' + MM2 + '/' + DD2 + '/' + YYYY2)
 
 def elementCounter(soup):
     #Returns the number of items in the first page of results

@@ -61,6 +61,9 @@ class Request:
         if 'TypeOfDate' in self.reqdic['Request']:
             self.ptsdt =  self.reqdic['Request']['TypeOfDate'].lower()
 
+        if 'PatentOffice' in self.reqdic['Request']:
+            self.ptso =  self.reqdic['Request']['PatentOffice'].lower()
+
         self.nullthreshold = int(self.reqdic['Request']['NullThreshold'])
         
         self.outfilepath = self.reqdic['Request']['Outfile']
@@ -108,6 +111,20 @@ class Request:
                         urlargs['ptsdt'] = 'a'
                     elif self.ptsdt == "publication":
                         urlargs['ptsdt'] = 'i'
+
+                    print self.ptso
+                    if self.ptso == "united states":
+                        urlargs['ptso'] = 'us'
+                    elif self.ptso == "europe":
+                        urlargs['ptso'] = 'ep'
+                    elif self.ptso == "international":
+                        urlargs['ptso'] = 'wo'
+                    elif self.ptso == "china":
+                        urlargs['ptso'] = 'cn'
+                    elif self.ptso == "germany":
+                        urlargs['ptso'] = 'de'
+                    elif self.ptso == "canada":
+                        urlargs['ptso'] = 'ca'
 
                 qdic = {'corpus' : self.corpus, 'date1' : YYYY1 + MM1 + DD1, 'date2' :  YYYY2 + MM2 + DD2, 'expression' : e, 'url' : makeURL(self.corpus, urlargs), 'result' : 0 , 'numbofexec' : 0}
                 c.execute(sql, qdic)
@@ -287,7 +304,7 @@ def makeURL(corpus, args):
 
     elif corpus == 'patents':
         tbm = 'pts'
-        return makeSafe('http://www.google.com/search?' + # base url
+        u = ('http://www.google.com/search?' + # base url
                         '&q=' + args['expression'] + # q for searched expression
                         '&lr=' + args['lr'] + # language restrict
                         '&safe=off' + # disable safe search
@@ -296,6 +313,9 @@ def makeURL(corpus, args):
                         '&tbs=cdr:1,' + # tbs parameters
                         'ptsdt:' + args['ptsdt'] + ',' + # type of date, a = filing date, i = publication date
                         timeMapper(args['d1'], args['d2'])) # date formatted by timeMapper
+        if 'ptso' in args:
+            u = u + ',ptso:' + args['ptso'] # patent office
+        return makeSafe(u) 
 
 
 def timeMapper(d1, d2):

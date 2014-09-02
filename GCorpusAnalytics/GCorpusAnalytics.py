@@ -55,6 +55,18 @@ class Request:
         self.y2 = int(self.reqdic['Request']['YearEnd'])
         self.it = int(self.reqdic['Request']['TimeInterval'])
         self.lr = self.reqdic['Request']['Language'].lower()
+        
+
+        # Patent arguments
+        if 'TypeOfDate' in self.reqdic['Request']:
+            self.ptsdt =  self.reqdic['Request']['TypeOfDate'].lower()
+
+        if 'PatentOffice' in self.reqdic['Request']:
+            self.ptso =  self.reqdic['Request']['PatentOffice'].lower()
+
+        if 'FilingStatus' in self.reqdic['Request']:
+            self.ptss =  self.reqdic['Request']['FilingStatus'].lower()
+
         self.nullthreshold = int(self.reqdic['Request']['NullThreshold'])
         
         self.outfilepath = self.reqdic['Request']['Outfile']
@@ -92,7 +104,39 @@ class Request:
             
             for e in self.expressions:
                 sql = "INSERT INTO Queries(corpus, date1, date2, expression, url, result, numbofexec) VALUES(:corpus, :date1, :date2, :expression, :url, :result, :numbofexec)"
-                qdic = {'corpus' : self.corpus, 'date1' : YYYY1 + MM1 + DD1, 'date2' :  YYYY2 + MM2 + DD2, 'expression' : e, 'url' : makeURL(self.corpus, e, d1, d2), 'result' : 0 , 'numbofexec' : 0}
+                urlargs = {'expression': e,
+                            'd1': d1,
+                            'd2': d2,
+                            'lr': self.lr}
+
+                if self.corpus == "patents":
+                    if self.ptsdt == "filing":
+                        urlargs['ptsdt'] = 'a'
+                    elif self.ptsdt == "publication":
+                        urlargs['ptsdt'] = 'i'
+
+                    if self.ptso:
+                        if self.ptso == "united states":
+                            urlargs['ptso'] = 'us'
+                        elif self.ptso == "europe":
+                            urlargs['ptso'] = 'ep'
+                        elif self.ptso == "international":
+                            urlargs['ptso'] = 'wo'
+                        elif self.ptso == "china":
+                            urlargs['ptso'] = 'cn'
+                        elif self.ptso == "germany":
+                            urlargs['ptso'] = 'de'
+                        elif self.ptso == "canada":
+                            urlargs['ptso'] = 'ca'
+
+                    if self.ptss:
+                        if self.ptss == "applications":
+                            urlargs['ptss'] = 'a'
+                        elif self.ptss == "issued patents":
+                            urlargs['ptss'] = 'g'
+
+
+                qdic = {'corpus' : self.corpus, 'date1' : YYYY1 + MM1 + DD1, 'date2' :  YYYY2 + MM2 + DD2, 'expression' : e, 'url' : makeURL(self.corpus, urlargs), 'result' : 0 , 'numbofexec' : 0}
                 c.execute(sql, qdic)
         conn.close()
                 
@@ -254,11 +298,37 @@ def makeDatelist(y1, y2, it):
         datelist.append(dates)
     return datelist
     
-def makeURL(corpus, expression, d1, d2):
+def makeURL(corpus, args):
     #Return the query URL
-    
+    #TODO: add a check for the argument object
+
     if corpus == 'books':
-        return makeSafe('http://www.google.com/search?hl=en&newwindow=1&q=' + expression + '&safe=off&tbm=bks&tbs=bkt:b%2C' + timeMapper(d1, d2))
+        tbm = 'bks'
+        return makeSafe('http://www.google.com/search?' + # base url
+                        '&q=' + args['expression'] + # q for searched expression
+                        '&lr=' + args['lr'] + # language restrict
+                        '&safe=off' + # disable safe search
+                        '&tbm=' + tbm + # corpus
+                        '&tbs=bkt:b,' + # only book results (i.e. no magazines for instance)
+                        'cdr:1,' + timeMapper(args['d1'], args['d2'])) # date formatted by timeMapper
+
+    elif corpus == 'patents':
+        tbm = 'pts'
+        u = ('http://www.google.com/search?' + # base url
+                        '&q=' + args['expression'] + # q for searched expression
+                        '&lr=' + args['lr'] + # language restrict
+                        '&safe=off' + # disable safe search
+                        '&source=lnt' + # all patent offices
+                        '&tbm=' + tbm + # corpus
+                        '&tbs=cdr:1,' + # tbs parameters
+                        'ptsdt:' + args['ptsdt'] + ',' + # type of date, a = filing date, i = publication date
+                        timeMapper(args['d1'], args['d2'])) # date formatted by timeMapper
+        if 'ptso' in args:
+            u = u + ',ptso:' + args['ptso'] # patent office
+        if 'ptss' in args:
+            u = u + ',ptss:' + args['ptss'] # filing status
+        return makeSafe(u) 
+
 
 def timeMapper(d1, d2):
     
@@ -270,7 +340,7 @@ def timeMapper(d1, d2):
     MM2 = str(d2.timetuple()[1])
     DD2 = str(d2.timetuple()[2])
     
-    return makeSafe('cdr:1,cd_min:' + MM1 + '/' + DD1 + '/' + YYYY1 + ',cd_max:' + MM2 + '/' + DD2 + '/' + YYYY2)
+    return makeSafe('cd_min:' + MM1 + '/' + DD1 + '/' + YYYY1 + ',cd_max:' + MM2 + '/' + DD2 + '/' + YYYY2)
 
 def elementCounter(soup):
     #Returns the number of items in the first page of results

@@ -64,6 +64,9 @@ class Request:
         if 'PatentOffice' in self.reqdic['Request']:
             self.ptso =  self.reqdic['Request']['PatentOffice'].lower()
 
+        if 'FilingStatus' in self.reqdic['Request']:
+            self.ptss =  self.reqdic['Request']['FilingStatus'].lower()
+
         self.nullthreshold = int(self.reqdic['Request']['NullThreshold'])
         
         self.outfilepath = self.reqdic['Request']['Outfile']
@@ -112,19 +115,26 @@ class Request:
                     elif self.ptsdt == "publication":
                         urlargs['ptsdt'] = 'i'
 
-                    print self.ptso
-                    if self.ptso == "united states":
-                        urlargs['ptso'] = 'us'
-                    elif self.ptso == "europe":
-                        urlargs['ptso'] = 'ep'
-                    elif self.ptso == "international":
-                        urlargs['ptso'] = 'wo'
-                    elif self.ptso == "china":
-                        urlargs['ptso'] = 'cn'
-                    elif self.ptso == "germany":
-                        urlargs['ptso'] = 'de'
-                    elif self.ptso == "canada":
-                        urlargs['ptso'] = 'ca'
+                    if self.ptso:
+                        if self.ptso == "united states":
+                            urlargs['ptso'] = 'us'
+                        elif self.ptso == "europe":
+                            urlargs['ptso'] = 'ep'
+                        elif self.ptso == "international":
+                            urlargs['ptso'] = 'wo'
+                        elif self.ptso == "china":
+                            urlargs['ptso'] = 'cn'
+                        elif self.ptso == "germany":
+                            urlargs['ptso'] = 'de'
+                        elif self.ptso == "canada":
+                            urlargs['ptso'] = 'ca'
+
+                    if self.ptss:
+                        if self.ptss == "applications":
+                            urlargs['ptss'] = 'a'
+                        elif self.ptss == "issued patents":
+                            urlargs['ptss'] = 'g'
+
 
                 qdic = {'corpus' : self.corpus, 'date1' : YYYY1 + MM1 + DD1, 'date2' :  YYYY2 + MM2 + DD2, 'expression' : e, 'url' : makeURL(self.corpus, urlargs), 'result' : 0 , 'numbofexec' : 0}
                 c.execute(sql, qdic)
@@ -315,6 +325,8 @@ def makeURL(corpus, args):
                         timeMapper(args['d1'], args['d2'])) # date formatted by timeMapper
         if 'ptso' in args:
             u = u + ',ptso:' + args['ptso'] # patent office
+        if 'ptss' in args:
+            u = u + ',ptss:' + args['ptss'] # filing status
         return makeSafe(u) 
 
 
